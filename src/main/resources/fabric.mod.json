@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "discordcontroller",
+  "version": "${version}",
+  "name": "Discord In-Game Controller",
+  "description": "Get backup fast in PvP: fires automatic 'under attack', low-health and manual help alerts to a Discord channel, DMs or webhooks with your coordinates, server IP and attacker. Teammates running the mod also see the alert in-game. Clan war posts, an animated in-game menu, keybinds, and /dcontroller commands.",
+  "authors": [
+    "Juicy Launcher"
+  ],
+  "icon": "assets/discordcontroller/icon.png",
+  "contact": {
+    "homepage": "https://example.com"
+  },
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.juicy.discordcontroller.DiscordControllerMod"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "fabric-api": "*",
+    "minecraft": ">=1.21.9 <1.22",
+    "java": ">=21"
+  }
+}
