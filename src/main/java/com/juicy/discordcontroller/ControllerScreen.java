@@ -23,27 +23,27 @@ import java.util.Map;
  */
 public class ControllerScreen extends Screen {
 
-    private static final int BG_TOP = 0xE6141726;
-    private static final int BG_BOT = 0xE60A0C16;
-    private static final int PANEL = 0xFF171B30;
-    private static final int PANEL_EDGE = 0xFF2A2F52;
-    private static final int CARD = 0xFF1E2340;
-    private static final int CARD_HI = 0xFF283056;
-    private static final int NAV_SEL = 0xFF262C4C;
-    private static final int ACCENT = 0xFF8A5CFF;
-    private static final int ACCENT2 = 0xFFFF6FA5;
-    private static final int BTN = 0xFF2A3157;
-    private static final int BTN_HI = 0xFF3A4275;
-    private static final int TXT = 0xFFF2F3FA;
-    private static final int TXT_DIM = 0xFFAAB0C8;
-    private static final int TXT_MUTE = 0xFF737A9C;
-    private static final int OK = 0xFF57E28A;
-    private static final int DANGER = 0xFFFF6B6B;
-    private static final int WARN = 0xFFFFC857;
-    private static final int TRACK_OFF = 0xFF3A3F60;
+    private static final int BG_TOP = 0xF0000000;
+    private static final int BG_BOT = 0xF0000000;
+    private static final int PANEL = 0xFF060609;
+    private static final int PANEL_EDGE = 0xFF1B1F2B;
+    private static final int CARD = 0xFF0C0D13;
+    private static final int CARD_HI = 0xFF15171F;
+    private static final int NAV_SEL = 0xFF121420;
+    private static final int ACCENT = 0xFF00E6FF;
+    private static final int ACCENT2 = 0xFFFF3DDA;
+    private static final int BTN = 0xFF101219;
+    private static final int BTN_HI = 0xFF191C27;
+    private static final int TXT = 0xFFF3F6FF;
+    private static final int TXT_DIM = 0xFF9AA0B4;
+    private static final int TXT_MUTE = 0xFF565C6E;
+    private static final int OK = 0xFF00FFA3;
+    private static final int DANGER = 0xFFFF3B5C;
+    private static final int WARN = 0xFFFFC24B;
+    private static final int TRACK_OFF = 0xFF22252F;
 
     private static final int[] AV_PALETTE = {
-            0xFF8A5CFF, 0xFFFF6FA5, 0xFF57E28A, 0xFF4EA8FF, 0xFFFFC857, 0xFFB56BFF, 0xFFFF8A5C, 0xFF3ED9C4
+            0xFF00E6FF, 0xFFFF3DDA, 0xFF00FFA3, 0xFF4EA8FF, 0xFFFFC24B, 0xFFB05CFF, 0xFFFF7A3D, 0xFF3EF0D8
     };
 
     private static final Identifier LOGO = Identifier.of("discordcontroller", "textures/gui/logo.png");
@@ -198,12 +198,13 @@ public class ControllerScreen extends Screen {
 
         ctx.fillGradient(0, 0, width, height, argbA(BG_TOP, ea), argbA(BG_BOT, ea));
 
-        for (int i = 8; i >= 1; i--) {
-            roundRect(ctx, px - i, py - i + 4, pw + i * 2, ph + i * 2, 12, argbA(0x14000000, ea));
+        // neon halo around the panel
+        for (int i = 6; i >= 1; i--) {
+            roundRect(ctx, px - i, py - i, pw + i * 2, ph + i * 2, 9 + i, argbA(ACCENT, ea * 0.14f / i));
         }
-        roundRect(ctx, px - 1, py - 1, pw + 2, ph + 2, 8, argbA(PANEL_EDGE, ea));
         roundRect(ctx, px, py, pw, ph, 8, argbA(PANEL, ea));
-        ctx.fillGradient(px + 1, py + 1, px + pw - 1, py + 44, argbA(0x338A5CFF, ea * 0.5f), 0);
+        roundRect(ctx, px, py, pw, 1, 0, argbA(ACCENT, ea * 0.5f));
+        ctx.fillGradient(px + 1, py + 1, px + pw - 1, py + 44, argbA(0x3300E6FF, ea * 0.35f), 0);
 
         // ambient drifting particles inside the panel
         for (int i = 0; i < 14; i++) {
@@ -258,6 +259,7 @@ public class ControllerScreen extends Screen {
         int uy = py + 38;
         float phase = (float) ((System.currentTimeMillis() % 3000) / 3000.0);
         int mid = lerpColor(ACCENT, ACCENT2, (float) (0.5 + 0.5 * Math.sin(phase * Math.PI * 2)));
+        glow(ctx, px + 14, uy - 1, navW - 20, 3, 1, ACCENT, 0.22f);
         ctx.fillGradient(px + 14, uy, px + navW - 6, uy + 1, argbA(ACCENT, ea), argbA(mid, ea));
 
         drawButton(ctx, "close", px + pw - 26, py + 12, 16, 16, "×", false, mouseX, mouseY, this::close);
@@ -461,12 +463,11 @@ public class ControllerScreen extends Screen {
                 () -> { cfg.alertOnDeath = !cfg.alertOnDeath; cfg.save(); });
         toggleRow(ctx, "asnd", x, contentTop() + 90, "Play a sound when an alert fires", cfg.alertSound, mouseX, mouseY,
                 () -> { cfg.alertSound = !cfg.alertSound; cfg.save(); });
+        toggleRow(ctx, "armhud", x, contentTop() + 118, "Show 'ARMED' HUD chip", cfg.hudArmedChip, mouseX, mouseY,
+                () -> { cfg.hudArmedChip = !cfg.hudArmedChip; cfg.save(); });
         ctx.drawTextWithShadow(textRenderer,
                 ft("§8Emergency + death alerts fire even if auto-alert is off."),
-                x, contentTop() + 122, argbA(TXT_MUTE, ea));
-        ctx.drawTextWithShadow(textRenderer,
-                ft("§8Attacker is inferred from knockback + proximity."),
-                x, contentTop() + 136, argbA(TXT_MUTE, ea));
+                x, contentTop() + 148, argbA(TXT_MUTE, ea));
     }
 
     private void drawOptions(DrawContext ctx, int mouseX, int mouseY, float delta) {
@@ -539,7 +540,8 @@ public class ControllerScreen extends Screen {
 
     private void drawPill(DrawContext ctx, int x, int y, String text, int color) {
         int w = textRenderer.getWidth(text) + 18;
-        roundRect(ctx, x, y, w, 14, 6, argbA(0x33000000 | (color & 0xFFFFFF), ea));
+        glow(ctx, x, y, w, 14, 6, color, 0.16f);
+        roundRect(ctx, x, y, w, 14, 6, argbA(0xCC060609, ea));
         float pulse = 0.5f + 0.5f * (float) Math.sin(System.currentTimeMillis() / 300.0);
         ctx.fill(x + 6, y + 5, x + 10, y + 9, argbA(color, ea * (0.4f + 0.6f * pulse)));
         ctx.drawTextWithShadow(textRenderer, ft(text), x + 14, y + 3, argbA(color, ea));
@@ -584,17 +586,15 @@ public class ControllerScreen extends Screen {
         int base = accent ? lerpColor(ACCENT, lerpColor(ACCENT, ACCENT2, 0.35f), hv) : lerpColor(BTN, BTN_HI, hv);
         float flash = (flashId != null && flashId.equals("btn:" + id))
                 ? clamp01(1f - (System.currentTimeMillis() - flashTime) / 220f) : 0f;
+        int br = h / 2;
+        if (accent) {
+            glow(ctx, x, y, w, h, br, lerpColor(ACCENT, ACCENT2, 0.3f), 0.10f + 0.12f * hv);
+        }
         if (flash > 0f) {
             base = lerpColor(base, 0xFFFFFFFF, flash * 0.35f);
         }
-        roundRect(ctx, x, y, w, h, 5, argbA(base, ea));
-        if (accent) {
-            ctx.fillGradient(x + 2, y + 1, x + w - 2, y + h / 2, argbA(0x33FFFFFF, ea * (0.4f + 0.6f * hv)), 0);
-        }
-        if (hv > 0.01f) {
-            roundRect(ctx, x, y, w, 1, 1, argbA(0x40FFFFFF, ea * hv));
-        }
-        ctx.drawCenteredTextWithShadow(textRenderer, ft(text), x + w / 2, y + (h - 8) / 2, argbA(TXT, ea));
+        roundRect(ctx, x, y, w, h, br, argbA(base, ea));
+        ctx.drawCenteredTextWithShadow(textRenderer, ft(text), x + w / 2, y + (h - 8) / 2, argbA(accent ? 0xFF04060A : TXT, ea));
         addHotspot("btn:" + id, x, y, w, h, action);
     }
 
@@ -613,9 +613,12 @@ public class ControllerScreen extends Screen {
         int tw = 34;
         int th = 16;
         float p = approach("tgl:" + id, on ? 1 : 0, 14);
-        roundRect(ctx, tx, ty, tw, th, 5, argbA(lerpColor(TRACK_OFF, ACCENT, p), ea));
+        if (p > 0.05f) {
+            glow(ctx, tx, ty, tw, th, th / 2, ACCENT, 0.20f * p);
+        }
+        roundRect(ctx, tx, ty, tw, th, th / 2, argbA(lerpColor(TRACK_OFF, ACCENT, p), ea));
         int knob = tx + 2 + (int) ((tw - th) * p);
-        roundRect(ctx, knob, ty + 2, th - 4, th - 4, 4, argbA(0xFFFFFFFF, ea));
+        roundRect(ctx, knob, ty + 2, th - 4, th - 4, (th - 4) / 2, argbA(0xFFFFFFFF, ea));
     }
 
     private void stepper(DrawContext ctx, String id, int x, int y, int w, String labelText, String value,
@@ -875,10 +878,25 @@ public class ControllerScreen extends Screen {
         }
         // Cap the radius at a quarter of the smaller side so the fill bands never
         // collapse into a plus/cross (which made knobs and pills look broken).
-        r = Math.max(0, Math.min(r, Math.min(w, h) / 4));
-        ctx.fill(x + r, y, x + w - r, y + h, argb);
-        ctx.fill(x, y + r, x + r, y + h - r, argb);
-        ctx.fill(x + w - r, y + r, x + w, y + h - r, argb);
+        r = Math.max(0, Math.min(r, Math.min(w, h) / 2));
+        if (r <= 1) {
+            ctx.fill(x, y, x + w, y + h, argb);
+            return;
+        }
+        // Full-width middle, then true rounded caps (one span per row along the arc).
+        ctx.fill(x, y + r, x + w, y + h - r, argb);
+        for (int dy = 0; dy < r; dy++) {
+            int inset = (int) Math.round(r - Math.sqrt((double) r * r - (double) (r - dy) * (r - dy)));
+            ctx.fill(x + inset, y + dy, x + w - inset, y + dy + 1, argb);
+            ctx.fill(x + inset, y + h - 1 - dy, x + w - inset, y + h - dy, argb);
+        }
+    }
+
+    /** Soft neon halo behind an element. */
+    private void glow(DrawContext ctx, int x, int y, int w, int h, int r, int color, float strength) {
+        for (int i = 3; i >= 1; i--) {
+            roundRect(ctx, x - i * 2, y - i * 2, w + i * 4, h + i * 4, r + i * 2, argbA(color, ea * strength / i));
+        }
     }
 
     private float approach(String key, float target, float speed) {

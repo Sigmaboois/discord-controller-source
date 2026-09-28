@@ -3,9 +3,18 @@ package com.juicy.discordcontroller;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 
-/** On-screen armed/cooldown chip plus transient alert toasts, drawn over the HUD. */
+/** OLED + neon on-screen armed/cooldown/combat chips and transient alert toasts. */
 public final class HudOverlay {
+
+    private static final Identifier FONT = Identifier.of("discordcontroller", "gui");
+    private static final net.minecraft.text.StyleSpriteSource FONT_SRC =
+            new net.minecraft.text.StyleSpriteSource.Font(FONT);
+
+    private static final int NEON_GREEN = 0xFF00FFA3;
+    private static final int NEON_AMBER = 0xFFFFC24B;
+    private static final int NEON_RED = 0xFFFF3B5C;
 
     private static String toastMsg = "";
     private static int toastColor = 0xFFFFFFFF;
@@ -31,56 +40,65 @@ public final class HudOverlay {
         }
         var tr = mc.textRenderer;
         int sw = ctx.getScaledWindowWidth();
+        long now = System.currentTimeMillis();
 
         AlertManager am = AlertManager.get();
         int y = 4;
         if (mc.currentScreen == null) {
             long cd = am.autoCooldownRemainingMs();
             String chip = null;
-            int col = 0xFFFFFFFF;
-            int dot = 0xFF57E28A;
+            int neon = NEON_GREEN;
             if (cd > 0) {
                 chip = "COOLDOWN " + (cd / 1000 + 1) + "s";
-                col = 0xFFAAB0C8;
-                dot = 0xFFFFC857;
+                neon = NEON_AMBER;
             } else if (cfg.autoAlertEnabled) {
                 chip = "ALERT ARMED";
-                col = 0xFF57E28A;
-                dot = 0xFF57E28A;
+                neon = NEON_GREEN;
             }
-            if (chip != null) {
-                int w = tr.getWidth(chip) + 18;
-                chipBg(ctx, 4, y, w, 14, 0xC8121422);
-                float pulse = 0.5f + 0.5f * (float) Math.sin(System.currentTimeMillis() / 300.0);
-                ctx.fill(4 + 6, y + 5, 4 + 10, y + 9, alpha(dot, 0.4f + 0.6f * pulse));
-                ctx.drawTextWithShadow(tr, Text.literal(chip), 4 + 14, y + 3, col);
+            if (chip != null && cfg.hudArmedChip) {
+                drawChip(ctx, tr, 4, y, chip, neon, now, 300.0);
                 y += 18;
             }
-
             if (am.inCombat()) {
                 String atk = am.combatAttacker();
-                int hits = am.combatHits();
                 int cnt = am.combatAttackerCount();
-                String line = "⚔ " + (atk != null ? atk : "Unknown") + " ×" + hits
+                String line = "⚔ " + (atk != null ? atk : "Unknown") + " ×" + am.combatHits()
                         + (cnt > 1 ? "  (" + cnt + " players)" : "");
-                int w = tr.getWidth(line) + 18;
-                chipBg(ctx, 4, y, w, 14, 0xC8121422);
-                float pulse = 0.5f + 0.5f * (float) Math.sin(System.currentTimeMillis() / 200.0);
-                ctx.fill(4 + 6, y + 5, 4 + 10, y + 9, alpha(0xFFFF6B6B, 0.4f + 0.6f * pulse));
-                ctx.drawTextWithShadow(tr, Text.literal(line), 4 + 14, y + 3, 0xFFFF9AA2);
+                drawChip(ctx, tr, 4, y, line, NEON_RED, now, 200.0);
             }
         }
 
-        long age = System.currentTimeMillis() - toastAt;
+        long age = now - toastAt;
         if (!toastMsg.isEmpty() && age < 4000) {
             float t = age / 4000f;
             float a = t < 0.1f ? t / 0.1f : (t > 0.8f ? (1 - t) / 0.2f : 1f);
             int w = tr.getWidth(toastMsg) + 24;
             int x = (sw - w) / 2;
             int ty = 18 - (int) ((1 - Math.min(1, age / 200f)) * 6);
-            chipBg(ctx, x, ty, w, 18, alpha(0xE6121422, a));
+            glow(ctx, x, ty, w, 18, toastColor, 0.18f * a);
+            chipBg(ctx, x, ty, w, 18, alpha(0xE6000000, a));
             ctx.fill(x, ty, x + 3, ty + 18, alpha(toastColor, a));
-            ctx.drawTextWithShadow(tr, Text.literal(toastMsg), x + 12, ty + 5, alpha(0xFFFFFFFF, a));
+            ctx.drawTextWithShadow(tr, ft(toastMsg), x + 12, ty + 5, alpha(0xFFFFFFFF, a));
+        }
+    }
+
+    private static void drawChip(DrawContext ctx, net.minecraft.client.font.TextRenderer tr,
+                                 int x, int y, String text, int neon, long now, double period) {
+        int w = tr.getWidth(text) + 20;
+        glow(ctx, x, y, w, 14, neon, 0.16f);
+        chipBg(ctx, x, y, w, 14, 0xE6000000);
+        float pulse = 0.5f + 0.5f * (float) Math.sin(now / period);
+        ctx.fill(x + 6, y + 5, x + 10, y + 9, alpha(neon, 0.35f + 0.65f * pulse));
+        ctx.drawTextWithShadow(tr, ft(text), x + 14, y + 3, neon);
+    }
+
+    private static net.minecraft.text.MutableText ft(String s) {
+        return Text.literal(s).styled(st -> st.withFont(FONT_SRC));
+    }
+
+    private static void glow(DrawContext ctx, int x, int y, int w, int h, int color, float a) {
+        for (int i = 3; i >= 1; i--) {
+            ctx.fill(x - i * 2, y - i * 2, x + w + i * 2, y + h + i * 2, alpha(color, a / i));
         }
     }
 

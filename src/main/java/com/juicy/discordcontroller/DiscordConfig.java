@@ -82,6 +82,9 @@ public class DiscordConfig {
     /** Show the on-screen armed/cooldown indicator and alert toasts. */
     public boolean hudEnabled = true;
 
+    /** Show the persistent ARMED / COOLDOWN chip (combat + toasts stay under hudEnabled). */
+    public boolean hudArmedChip = true;
+
     /** Play UI click/hover sounds in the menu. */
     public boolean uiSounds = true;
 
