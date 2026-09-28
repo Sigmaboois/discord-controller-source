@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Animated OLED + neon menu (webhook-only). Immediate-mode with hotspot hit-testing. */
 public class ControllerScreen extends Screen {
 
     private static final int BG = 0xF0000000;

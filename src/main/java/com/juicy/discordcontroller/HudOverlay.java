@@ -5,7 +5,6 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
-/** OLED + neon on-screen armed/cooldown/combat chips and transient alert toasts. */
 public final class HudOverlay {
 
     private static final Identifier FONT = Identifier.of("discordcontroller", "gui");

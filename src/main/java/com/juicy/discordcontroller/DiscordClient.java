@@ -6,7 +6,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 
-/** Posts alert payloads to Discord webhook URLs. That's the whole network surface. */
 public final class DiscordClient {
 
     private static final HttpClient HTTP = HttpClient.newBuilder()
@@ -16,7 +15,6 @@ public final class DiscordClient {
     private DiscordClient() {
     }
 
-    /** POST a raw JSON body to a Discord webhook URL. Returns true on success. */
     public static boolean sendWebhook(String webhookUrl, String json) {
         try {
             HttpRequest req = HttpRequest.newBuilder(URI.create(webhookUrl))

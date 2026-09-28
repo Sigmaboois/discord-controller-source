@@ -7,10 +7,6 @@ import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
-/**
- * Registers the mod's keybinds (unbound by default) into the vanilla Controls
- * screen under a "Discord Controller" category.
- */
 public final class Keybinds {
 
     private static final KeyBinding.Category CATEGORY =

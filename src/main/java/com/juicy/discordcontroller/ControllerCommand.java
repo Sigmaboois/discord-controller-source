@@ -20,7 +20,6 @@ import java.util.concurrent.CompletableFuture;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
-/** {@code /dcontroller} - opens the menu and configures webhooks, alerts and clan posts. */
 public final class ControllerCommand {
 
     private static final Gson GSON = new Gson();
@@ -228,8 +227,6 @@ public final class ControllerCommand {
         return 1;
     }
 
-    // ---- clan ----
-
     private static int setClanName(CommandContext<FabricClientCommandSource> ctx) {
         DiscordConfig cfg = DiscordControllerMod.getConfig();
         cfg.clanName = StringArgumentType.getString(ctx, "name").trim();
@@ -339,8 +336,6 @@ public final class ControllerCommand {
             return "";
         }
     }
-
-    // ---- suggestions (used by the GUI-independent value hints) ----
 
     static CompletableFuture<Suggestions> suggestValues(SuggestionsBuilder builder, String... values) {
         String remaining = builder.getRemaining().toLowerCase();

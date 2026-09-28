@@ -20,11 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Watches health each tick and posts an alert to the configured webhook(s) when a
- * player lands enough hits/damage, when health drops critically, or on death. Also
- * tracks live combat state for the HUD.
- */
 public final class AlertManager {
 
     private static final Gson GSON = new Gson();
@@ -202,8 +197,6 @@ public final class AlertManager {
         return best;
     }
 
-    // ---- live combat state (HUD) ----
-
     public boolean inCombat() {
         return System.currentTimeMillis() - lastPlayerHitTime < COMBAT_TIMEOUT_MS;
     }
@@ -251,8 +244,6 @@ public final class AlertManager {
         return t == null ? 0 : t.total();
     }
 
-    // ---- manual / test ----
-
     public void sendManualAlert(MinecraftClient mc) {
         manual(mc, Kind.MANUAL);
     }
@@ -291,8 +282,6 @@ public final class AlertManager {
         DiscordConfig cfg = DiscordControllerMod.getConfig();
         return Math.max(0, Math.max(0, cfg.alertCooldownSeconds) * 1000L - (System.currentTimeMillis() - lastAutoAlert));
     }
-
-    // ---- dispatch ----
 
     private void fire(MinecraftClient mc, DiscordConfig cfg, Kind kind, String attacker, int hits, double dmgLost) {
         String victim = mc.player.getName().getString();

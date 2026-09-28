@@ -9,10 +9,6 @@ import java.awt.event.KeyEvent;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
-/**
- * {@code /answer} simulates the configured hotkey. Bind Discord's "Answer Call"
- * as a Global keybind to the same key so it fires while Minecraft is focused.
- */
 public final class AnswerCommand {
 
     private AnswerCommand() {

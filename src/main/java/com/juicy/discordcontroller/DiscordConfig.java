@@ -9,28 +9,20 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Mod settings, persisted as JSON under config/discord-controller.json. Webhook-only. */
 public class DiscordConfig {
 
-    /** Brand + footer shown on outgoing embeds and in the menu. */
     public String brand = "Juicy Launcher";
     public String footer = "Discord HUD Controller";
 
-    // --- delivery ---
-    /** Webhook URLs alerts are posted to. */
     public List<String> alertWebhooks = new ArrayList<>();
-    /** Legacy single webhook, migrated into {@link #alertWebhooks} on load. */
     public String alertWebhookUrl = "";
-    /** Prepend {@code @everyone} to alert posts. */
     public boolean alertPingEveryone = true;
 
-    // --- /answer hotkey (simulates Discord's Global "Answer Call" keybind) ---
     public int answerVk = 0x27;
     public boolean answerCtrl = false;
     public boolean answerShift = false;
     public boolean answerAlt = false;
 
-    // --- attack alerting ---
     public boolean autoAlertEnabled = true;
     public int alertHitThreshold = 5;
     public double alertHealthLoss = 6.0;
@@ -44,13 +36,11 @@ public class DiscordConfig {
     public boolean alertOnDeath = false;
     public boolean alertSound = true;
 
-    // --- HUD / UI ---
     public boolean hudEnabled = true;
     public boolean hudArmedChip = true;
     public boolean uiSounds = true;
     public boolean seenSetup = false;
 
-    // --- clan announcements ---
     public String clanName = "";
     public String clanWebhookUrl = "";
     public boolean clanPingEveryone = true;

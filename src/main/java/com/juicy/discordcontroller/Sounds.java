@@ -8,12 +8,6 @@ import net.minecraft.sound.SoundEvent;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-/**
- * Plays a UI sound across Minecraft 1.21.9–1.21.11. The
- * {@code PositionedSoundInstance.ui(...)} factory and {@code SoundManager.play(...)}
- * overloads changed between these versions, so this resolves whatever variant the
- * running version exposes via reflection and fails silently if none matches.
- */
 public final class Sounds {
 
     private Sounds() {
