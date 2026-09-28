@@ -3,7 +3,7 @@
   "id": "discordcontroller",
   "version": "${version}",
   "name": "Discord In-Game Controller",
-  "description": "Get backup fast in PvP: fires automatic 'under attack', low-health and manual help alerts to a Discord channel, DMs or webhooks with your coordinates, server IP and attacker. Teammates running the mod also see the alert in-game. Clan war posts, an animated in-game menu, keybinds, and /dcontroller commands.",
+  "description": "Get backup fast in PvP: fires automatic 'under attack', low-health, manual and death alerts to a Discord webhook with your coordinates, server IP and attacker. Clan war posts, an animated OLED/neon in-game menu, keybinds and /dcontroller commands. Setup is one webhook URL - no bot needed.",
   "authors": [
     "Juicy Launcher"
   ],

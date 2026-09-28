@@ -7,7 +7,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ServerInfo;
-import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.sound.SoundEvents;
@@ -22,10 +21,8 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Watches health each tick and infers who is hitting you (via synced attacker,
- * then knockback direction, then proximity). Fires an "under attack" alert when a
- * player lands enough hits/damage in a window, an emergency alert when your health
- * drops critically while fighting a player, and optionally a death alert. Also
+ * Watches health each tick and posts an alert to the configured webhook(s) when a
+ * player lands enough hits/damage, when health drops critically, or on death. Also
  * tracks live combat state for the HUD.
  */
 public final class AlertManager {
@@ -38,20 +35,17 @@ public final class AlertManager {
         return INSTANCE;
     }
 
-    /** What triggered an alert -- drives wording and colour. */
     public enum Kind {
-        AUTO("Auto-alert", "🚨 UNDER ATTACK", 0xE74C3C),
-        EMERGENCY("Emergency", "🩸 LOW HEALTH", 0xC0392B),
-        MANUAL("Manual alert", "🆘 HELP REQUEST", 0xF39C12),
-        DEATH("Death alert", "☠ DOWNED", 0x7F1D1D),
-        TEST("Test alert", "🧪 TEST ALERT", 0x3498DB);
+        AUTO("🚨 UNDER ATTACK", 0xE74C3C),
+        EMERGENCY("🩸 LOW HEALTH", 0xC0392B),
+        MANUAL("🆘 HELP REQUEST", 0xF39C12),
+        DEATH("☠ DOWNED", 0x7F1D1D),
+        TEST("🧪 TEST ALERT", 0x3498DB);
 
-        final String tag;
         final String title;
         final int color;
 
-        Kind(String tag, String title, int color) {
-            this.tag = tag;
+        Kind(String title, int color) {
             this.title = title;
             this.color = color;
         }
@@ -110,8 +104,7 @@ public final class AlertManager {
         }
 
         if (hp <= 0f) {
-            if (lastHealth > 0f && cfg.alertOnDeath && isConfigured(cfg)
-                    && now - lastDeathAlert >= 3000L) {
+            if (lastHealth > 0f && cfg.alertOnDeath && isConfigured(cfg) && now - lastDeathAlert >= 3000L) {
                 lastDeathAlert = now;
                 fire(mc, cfg, Kind.DEATH, topAttackerName(), topHitCount(), topDamage());
             }
@@ -122,14 +115,13 @@ public final class AlertManager {
         double delta = lastHealth - hp;
         lastHealth = hp;
         prune(now, windowMs);
-
         if (delta <= 0.01) {
             return;
         }
 
         PlayerEntity attacker = resolveAttacker(mc, cfg.attackRadius);
         if (attacker == null) {
-            return; // no player in range -> environmental damage, ignore
+            return;
         }
 
         lastPlayerHitTime = now;
@@ -168,7 +160,6 @@ public final class AlertManager {
         windows.values().removeIf(w -> w.hits.isEmpty());
     }
 
-    /** Attacker attribution: synced attacker, else knockback direction, else nearest. */
     private PlayerEntity resolveAttacker(MinecraftClient mc, double radius) {
         ClientPlayerEntity me = mc.player;
         double radiusSq = radius * radius;
@@ -200,7 +191,6 @@ public final class AlertManager {
             double dist = Math.sqrt(d2) + 0.001;
             double score = -dist;
             if (hasKb) {
-                // knockback pushes me away from the attacker, so (me -> attacker) ~ -velocity
                 double align = -(dx * vx + dz * vz) / (dist * kb);
                 score += align * radius * 1.5;
             }
@@ -212,7 +202,7 @@ public final class AlertManager {
         return best;
     }
 
-    // ---- live combat state (for the HUD) -----------------------------
+    // ---- live combat state (HUD) ----
 
     public boolean inCombat() {
         return System.currentTimeMillis() - lastPlayerHitTime < COMBAT_TIMEOUT_MS;
@@ -261,7 +251,7 @@ public final class AlertManager {
         return t == null ? 0 : t.total();
     }
 
-    // ---- manual / test ----------------------------------------------
+    // ---- manual / test ----
 
     public void sendManualAlert(MinecraftClient mc) {
         manual(mc, Kind.MANUAL);
@@ -278,7 +268,7 @@ public final class AlertManager {
         }
         DiscordConfig cfg = DiscordControllerMod.getConfig();
         if (!isConfigured(cfg)) {
-            chat(mc, "§cNo alert targets set. Use §f/dcontroller alert targets add <id>§c or §f/dcontroller alert webhook add <url>§c.");
+            chat(mc, "§cNo webhook set. Add one in §f/dcontroller§c (Webhooks tab) or §f/dcontroller alert webhook add <url>§c.");
             return;
         }
         if (kind == Kind.MANUAL) {
@@ -294,11 +284,7 @@ public final class AlertManager {
     }
 
     public static boolean isConfigured(DiscordConfig cfg) {
-        boolean dm = !cfg.token.isEmpty() && !cfg.alertTargetIds.isEmpty();
-        boolean group = !cfg.token.isEmpty()
-                && cfg.alertGroupChannelId != null && !cfg.alertGroupChannelId.isBlank();
-        boolean webhook = cfg.alertWebhooks != null && !cfg.alertWebhooks.isEmpty();
-        return dm || group || webhook;
+        return cfg.alertWebhooks != null && !cfg.alertWebhooks.isEmpty();
     }
 
     public long autoCooldownRemainingMs() {
@@ -306,57 +292,28 @@ public final class AlertManager {
         return Math.max(0, Math.max(0, cfg.alertCooldownSeconds) * 1000L - (System.currentTimeMillis() - lastAutoAlert));
     }
 
-    // ---- dispatch ----------------------------------------------------
+    // ---- dispatch ----
 
-    private void fire(MinecraftClient mc, DiscordConfig cfg, Kind kind,
-                      String attacker, int hits, double dmgLost) {
+    private void fire(MinecraftClient mc, DiscordConfig cfg, Kind kind, String attacker, int hits, double dmgLost) {
         String victim = mc.player.getName().getString();
         String coords = coords(mc);
         String dim = dimension(mc);
         String server = serverAddress(mc);
         int others = Math.max(0, combatAttackerCount() - 1);
+        String json = buildWebhookJson(cfg, kind, victim, attacker, coords, dim, server, hits, dmgLost, others);
 
-        String dm = buildDm(cfg, kind, victim, attacker, coords, dim, server, hits, dmgLost, others);
-        String webhookJson = buildWebhookJson(cfg, kind, victim, attacker, coords, dim, server, hits, dmgLost, others);
-
-        int dmCount = 0;
-        if (!cfg.token.isEmpty()) {
-            for (String id : new ArrayList<>(cfg.alertTargetIds)) {
-                if (!cfg.isTargetEnabled(id)) {
-                    continue;
-                }
-                String content = "<@" + id + ">\n" + dm;
-                new Thread(() -> {
-                    String ch = DiscordClient.openDmChannel(cfg.token, id);
-                    if (ch != null) {
-                        DiscordClient.sendMessage(cfg.token, ch, content);
-                    }
-                }, "dcontroller-alert-dm").start();
-                dmCount++;
-            }
-        }
-
-        boolean group = !cfg.token.isEmpty()
-                && cfg.alertGroupChannelId != null && !cfg.alertGroupChannelId.isBlank();
-        if (group) {
-            boolean everyone = cfg.alertPingEveryone && kind != Kind.TEST;
-            String groupContent = (everyone ? "@everyone\n" : "") + dm;
-            new Thread(() -> DiscordClient.sendMessage(cfg.token, cfg.alertGroupChannelId, groupContent),
-                    "dcontroller-alert-group").start();
-        }
-
-        int webhookCount = 0;
+        int count = 0;
         for (String url : new ArrayList<>(cfg.alertWebhooks)) {
             if (url == null || url.isBlank()) {
                 continue;
             }
             String u = url;
-            new Thread(() -> DiscordClient.sendWebhook(u, webhookJson), "dcontroller-alert-webhook").start();
-            webhookCount++;
+            new Thread(() -> DiscordClient.sendWebhook(u, json), "dcontroller-alert").start();
+            count++;
         }
 
         if (cfg.alertSound) {
-            playAlertSound(mc, kind);
+            Sounds.ui(mc, SoundEvents.BLOCK_NOTE_BLOCK_BELL, kind == Kind.TEST ? 1.4f : 0.8f);
         }
 
         String prefix = switch (kind) {
@@ -366,14 +323,7 @@ public final class AlertManager {
             case DEATH -> "§4☠ Death alert";
             case TEST -> "§bTest alert";
         };
-        StringBuilder to = new StringBuilder(dmCount + " DM" + (dmCount == 1 ? "" : "s"));
-        if (group) {
-            to.append(" + channel");
-        }
-        if (webhookCount > 0) {
-            to.append(" + ").append(webhookCount).append(" webhook").append(webhookCount == 1 ? "" : "s");
-        }
-        chat(mc, prefix + " §7sent §f(" + to + "§7).");
+        chat(mc, prefix + " §7sent to §f" + count + "§7 webhook" + (count == 1 ? "" : "s") + ".");
 
         HudOverlay.toast(switch (kind) {
             case AUTO -> "Attack alert sent";
@@ -389,44 +339,6 @@ public final class AlertManager {
             windows.clear();
             chat(mc, "§7Auto-alert §cturned off§7 after firing — re-arm with §f/dcontroller alert auto on§7.");
         }
-    }
-
-    private static void playAlertSound(MinecraftClient mc, Kind kind) {
-        Sounds.ui(mc, SoundEvents.BLOCK_NOTE_BLOCK_BELL, kind == Kind.TEST ? 1.4f : 0.8f);
-    }
-
-    private String buildDm(DiscordConfig cfg, Kind kind, String victim, String attacker,
-                           String coords, String dim, String server, int hits, double dmgLost, int others) {
-        boolean combat = kind == Kind.AUTO || kind == Kind.EMERGENCY;
-        StringBuilder sb = new StringBuilder();
-        sb.append("# ").append(kind.title).append(" — ").append(victim);
-        sb.append(switch (kind) {
-            case AUTO, EMERGENCY -> " needs help!\n";
-            case DEATH -> " was downed!\n";
-            default -> "\n";
-        });
-        if (attacker != null) {
-            String lbl = switch (kind) {
-                case AUTO, EMERGENCY -> "Attacker";
-                case DEATH -> "Killed by";
-                default -> "Nearby player";
-            };
-            sb.append("**").append(lbl).append(":** `").append(attacker).append("`");
-            if (others > 0) {
-                sb.append(" (+").append(others).append(" more)");
-            }
-            sb.append("\n");
-        }
-        sb.append("**Location:** `").append(coords).append("`  ·  ").append(dim).append("\n");
-        sb.append("**Server:** `").append(server).append("`\n");
-        if (combat) {
-            sb.append("**Damage:** ").append(hits).append(" hits · ")
-                    .append(fmtHearts(dmgLost)).append(" ❤ lost (last ")
-                    .append(cfg.alertWindowSeconds).append("s)\n");
-        }
-        sb.append("-# 🛡️ ").append(kind.tag)
-                .append(" · ").append(cfg.footer).append(" | ").append(cfg.brand);
-        return sb.toString();
     }
 
     private String buildWebhookJson(DiscordConfig cfg, Kind kind, String victim, String attacker,
@@ -456,19 +368,16 @@ public final class AlertManager {
         JsonArray fields = new JsonArray();
         if (attacker != null) {
             String lbl = switch (kind) {
-                case AUTO, EMERGENCY -> "Attacker";
                 case DEATH -> "Killed by";
-                default -> "Nearby player";
+                default -> "Attacker";
             };
-            String val = "`" + attacker + "`" + (others > 0 ? " (+" + others + " more)" : "");
-            fields.add(field(lbl, val, true));
+            fields.add(field(lbl, "`" + attacker + "`" + (others > 0 ? " (+" + others + " more)" : ""), true));
         }
         fields.add(field("Server", "`" + server + "`", true));
         fields.add(field("Location", "`" + coords + "`  ·  " + dim, false));
         if (combat) {
             fields.add(field("Damage",
-                    hits + " hits · " + fmtHearts(dmgLost) + " ❤ lost (last "
-                            + cfg.alertWindowSeconds + "s)", false));
+                    hits + " hits · " + fmtHearts(dmgLost) + " ❤ lost (last " + cfg.alertWindowSeconds + "s)", false));
         }
         embed.add("fields", fields);
 
@@ -492,9 +401,7 @@ public final class AlertManager {
 
     private static String coords(MinecraftClient mc) {
         PlayerEntity p = mc.player;
-        return (int) Math.floor(p.getX()) + ", "
-                + (int) Math.floor(p.getY()) + ", "
-                + (int) Math.floor(p.getZ());
+        return (int) Math.floor(p.getX()) + ", " + (int) Math.floor(p.getY()) + ", " + (int) Math.floor(p.getZ());
     }
 
     private static String dimension(MinecraftClient mc) {
@@ -520,9 +427,7 @@ public final class AlertManager {
 
     private static String fmtHearts(double hp) {
         double hearts = hp / 2.0;
-        return (hearts == Math.floor(hearts))
-                ? String.valueOf((int) hearts)
-                : String.format("%.1f", hearts);
+        return (hearts == Math.floor(hearts)) ? String.valueOf((int) hearts) : String.format("%.1f", hearts);
     }
 
     private static void chat(MinecraftClient mc, String msg) {

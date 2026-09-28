@@ -16,7 +16,6 @@ public class DiscordControllerMod implements ClientModInitializer {
         Keybinds.register();
 
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
-            DmsgCommand.register(dispatcher);
             AnswerCommand.register(dispatcher);
             ControllerCommand.register(dispatcher);
         });
@@ -24,7 +23,6 @@ public class DiscordControllerMod implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             Keybinds.onEndTick(client);
             AlertManager.get().onClientTick(client);
-            IncomingAlerts.get().onClientTick(client);
         });
 
         HudRenderCallback.EVENT.register((ctx, tickCounter) -> HudOverlay.render(ctx));
