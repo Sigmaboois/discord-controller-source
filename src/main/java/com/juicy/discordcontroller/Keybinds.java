@@ -7,10 +7,9 @@ import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
-public final class Keybinds {
+import java.lang.reflect.Method;
 
-    private static final KeyBinding.Category CATEGORY =
-            KeyBinding.Category.create(Identifier.of("discordcontroller", "controls"));
+public final class Keybinds {
 
     private static KeyBinding answerKey;
     private static KeyBinding alertKey;
@@ -21,29 +20,32 @@ public final class Keybinds {
     }
 
     public static void register() {
-        answerKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.discordcontroller.answer",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_UNKNOWN,
-                CATEGORY));
+        answerKey = makeKeyBinding("key.discordcontroller.answer");
+        alertKey = makeKeyBinding("key.discordcontroller.help_alert");
+        menuKey = makeKeyBinding("key.discordcontroller.menu");
+        armKey = makeKeyBinding("key.discordcontroller.toggle_auto");
+    }
 
-        alertKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.discordcontroller.help_alert",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_UNKNOWN,
-                CATEGORY));
-
-        menuKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.discordcontroller.menu",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_UNKNOWN,
-                CATEGORY));
-
-        armKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.discordcontroller.toggle_auto",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_UNKNOWN,
-                CATEGORY));
+    private static KeyBinding makeKeyBinding(String translationKey) {
+        try {
+            Class<?> catClass = Class.forName("net.minecraft.client.option.KeyBinding$Category");
+            Method create = catClass.getMethod("create", Identifier.class);
+            Object category = create.invoke(null, Identifier.of("discordcontroller", "controls"));
+            return KeyBindingHelper.registerKeyBinding(
+                    (KeyBinding) KeyBinding.class
+                            .getConstructor(String.class, InputUtil.Type.class, int.class, catClass)
+                            .newInstance(translationKey, InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, category));
+        } catch (Throwable ignored) {
+            try {
+                return KeyBindingHelper.registerKeyBinding(
+                        (KeyBinding) KeyBinding.class
+                                .getConstructor(String.class, InputUtil.Type.class, int.class, String.class)
+                                .newInstance(translationKey, InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN,
+                                        "key.category.discordcontroller.controls"));
+            } catch (Throwable ignored2) {
+                return null;
+            }
+        }
     }
 
     public static void onEndTick(MinecraftClient client) {

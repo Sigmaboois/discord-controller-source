@@ -18,6 +18,9 @@
       "com.juicy.discordcontroller.DiscordControllerMod"
     ]
   },
+  "mixins": [
+    "discordcontroller.mixins.json"
+  ],
   "depends": {
     "fabricloader": ">=0.19.0",
     "fabric-api": "*",

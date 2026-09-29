@@ -45,6 +45,15 @@ tasks.withType(JavaCompile).configureEach {
     it.options.release = 21
 }
 
+def legacyMc = ["1.21.6", "1.21.7", "1.21.8"].contains(project.minecraft_version)
+sourceSets {
+    main {
+        java {
+            srcDir legacyMc ? "src/legacy/java" : "src/modern/java"
+        }
+    }
+}
+
 java {
     withSourcesJar()
     sourceCompatibility = JavaVersion.VERSION_21

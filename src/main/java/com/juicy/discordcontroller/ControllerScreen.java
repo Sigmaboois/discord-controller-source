@@ -2,7 +2,6 @@ package com.juicy.discordcontroller;
 
 import com.google.gson.JsonObject;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -43,11 +42,9 @@ public class ControllerScreen extends Screen {
 
     private static final Identifier LOGO = Identifier.of("discordcontroller", "textures/gui/logo.png");
     private static final Identifier FONT = Identifier.of("discordcontroller", "gui");
-    private static final net.minecraft.text.StyleSpriteSource FONT_SRC =
-            new net.minecraft.text.StyleSpriteSource.Font(FONT);
 
     private static net.minecraft.text.MutableText ft(String s) {
-        return Text.literal(s).styled(st -> st.withFont(FONT_SRC));
+        return Fonts.styled(s, FONT);
     }
 
     private enum Tab {
@@ -873,14 +870,11 @@ public class ControllerScreen extends Screen {
         statusColor = color;
     }
 
-    @Override
-    public boolean mouseClicked(Click click, boolean doubled) {
-        if (click.button() == 0) {
-            double mx = click.x();
-            double my = click.y();
+    public boolean clickAt(double mouseX, double mouseY, int button) {
+        if (button == 0) {
             for (int i = hotspots.size() - 1; i >= 0; i--) {
                 Hotspot h = hotspots.get(i);
-                if (mx >= h.x && mx < h.x + h.w && my >= h.y && my < h.y + h.h) {
+                if (mouseX >= h.x && mouseX < h.x + h.w && mouseY >= h.y && mouseY < h.y + h.h) {
                     flashId = h.id;
                     flashTime = System.currentTimeMillis();
                     playClick();
@@ -889,10 +883,11 @@ public class ControllerScreen extends Screen {
                 }
             }
         }
-        if (modal) {
-            return true;
-        }
-        return super.mouseClicked(click, doubled);
+        return false;
+    }
+
+    public boolean blocksClicks() {
+        return modal;
     }
 
     @Override

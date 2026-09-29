@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "com.juicy.discordcontroller.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "ControllerScreenMouseMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -8,8 +8,6 @@ import net.minecraft.util.Identifier;
 public final class HudOverlay {
 
     private static final Identifier FONT = Identifier.of("discordcontroller", "gui");
-    private static final net.minecraft.text.StyleSpriteSource FONT_SRC =
-            new net.minecraft.text.StyleSpriteSource.Font(FONT);
 
     private static final int NEON_GREEN = 0xFF00FFA3;
     private static final int NEON_AMBER = 0xFFFFC24B;
@@ -92,7 +90,7 @@ public final class HudOverlay {
     }
 
     private static net.minecraft.text.MutableText ft(String s) {
-        return Text.literal(s).styled(st -> st.withFont(FONT_SRC));
+        return Fonts.styled(s, FONT);
     }
 
     private static void glow(DrawContext ctx, int x, int y, int w, int h, int color, float a) {

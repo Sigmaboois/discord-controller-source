@@ -35,11 +35,25 @@ public final class JoinCommand {
         try {
             ServerAddress addr = ServerAddress.parse(address);
             ServerInfo info = new ServerInfo("Discord Alert", address, ServerInfo.ServerType.OTHER);
-            CookieStorage cookies = new CookieStorage(Map.of(), Map.of(), false);
+            CookieStorage cookies = newCookieStorage();
             ConnectScreen.connect(client.currentScreen, client, addr, info, false, cookies);
         } catch (Exception e) {
             if (client.player != null) {
                 client.player.sendMessage(Text.literal("§cCould not join " + address), false);
+            }
+        }
+    }
+
+    private static CookieStorage newCookieStorage() {
+        try {
+            return (CookieStorage) CookieStorage.class.getConstructor(Map.class).newInstance(Map.of());
+        } catch (Throwable ignored) {
+            try {
+                return (CookieStorage) CookieStorage.class
+                        .getConstructor(Map.class, Map.class, boolean.class)
+                        .newInstance(Map.of(), Map.of(), false);
+            } catch (Throwable ignored2) {
+                return null;
             }
         }
     }
