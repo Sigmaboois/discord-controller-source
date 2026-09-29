@@ -198,12 +198,7 @@ public final class IncomingAlerts {
 
         DiscordConfig cfg = DiscordControllerMod.getConfig();
         if (cfg.alertSound) {
-            try {
-                mc.getSoundManager().play(
-                        net.minecraft.client.sound.PositionedSoundInstance.ui(
-                                net.minecraft.sound.SoundEvents.BLOCK_NOTE_BLOCK_BELL, 0.7f), 0);
-            } catch (Exception ignored) {
-            }
+            Sounds.ui(mc, net.minecraft.sound.SoundEvents.BLOCK_NOTE_BLOCK_BELL, 0.7f);
         }
         HudOverlay.toast(sender + " needs help!", 0xFFFF6B6B);
     }

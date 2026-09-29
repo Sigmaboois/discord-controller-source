@@ -7,7 +7,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ServerInfo;
-import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.sound.SoundEvents;
@@ -376,11 +375,8 @@ public final class AlertManager {
     }
 
     private static void playAlertSound(MinecraftClient mc, Kind kind) {
-        try {
-            float pitch = kind == Kind.TEST ? 1.4f : 0.8f;
-            mc.getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.BLOCK_NOTE_BLOCK_BELL, pitch), 0);
-        } catch (Exception ignored) {
-        }
+        float pitch = kind == Kind.TEST ? 1.4f : 0.8f;
+        Sounds.ui(mc, SoundEvents.BLOCK_NOTE_BLOCK_BELL, pitch);
     }
 
     private String buildDm(DiscordConfig cfg, Kind kind, String victim, String attacker,

@@ -34,9 +34,10 @@ dependencies {
 
 processResources {
     inputs.property "version", project.version
+    inputs.property "minecraft_version", project.minecraft_version
 
     filesMatching("fabric.mod.json") {
-        expand "version": project.version
+        expand "version": project.version, "minecraft_version": project.minecraft_version
     }
 }
 
@@ -62,7 +63,7 @@ modrinth {
     versionNumber = project.mod_version
     versionType = "release"
     uploadFile = remapJar
-    gameVersions = ["1.21.11"]
+    gameVersions = [project.minecraft_version]
     loaders = ["fabric"]
     syncBodyFrom = rootProject.file("MODRINTH.md").text
 }
