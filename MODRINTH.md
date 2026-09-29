@@ -1,50 +1,27 @@
 # Discord Controller
 
-**Get backup the instant you're jumped.** Discord Controller watches your health in PvP and, the moment a player is beating you down, automatically posts to your team's Discord — with your **coordinates**, the **server IP**, and **who's attacking you**.
+Control Discord from inside Minecraft. Send DMs, answer calls, and fire under-attack / help alerts that carry your coordinates, dimension and server IP to your friends. Link teammates' Discord accounts to their Minecraft accounts so their alerts reach you in-game with a one-click join button.
 
-Setup is a single **webhook URL** — copy it from your Discord channel, paste it in. No bot, no login, nothing to host.
+## How the token is handled
 
----
+The mod drives your own Discord account with a **user token**. On Windows it can auto-detect that token by reading Discord's local desktop data (DPAPI + AES-GCM), or you can paste a token manually.
+
+- **Read locally only** — the token is extracted from your own machine and stored in `config/discord-controller.json`.
+- **Encrypted + password protected** — AES-256-GCM with a PBKDF2-HMAC-SHA256 master-password key. The raw token is never written to disk.
+- **Never sent anywhere else** — the only network traffic is to Discord's own API to send the messages and alerts you request. No telemetry, no uploads, no third parties.
 
 ## Features
 
-- 🚨 **Automatic attack alert** — fires when the same player lands enough hits and damage in a short window.
-- 🩸 **Low-health emergency** — an instant `@everyone` the moment your HP drops critically mid-fight.
-- 🆘 **Manual SOS** — one keybind (or command) to call for help any time.
-- ☠️ **Death alert** *(optional)* — fires when you go down.
-- 🎯 **Smart attacker detection** — inferred from knockback + proximity, and it flags when you're ganged by several players.
-- ⚔️ **Clan war posts** — announce your clan vs an enemy and the time with a single command.
-- 🖥️ **Sleek OLED + neon UI** — a glowing HUD (armed / cooldown / live combat) and an animated in-game menu with a custom font.
-
----
-
-## Setup — 30 seconds
-
-1. In Discord: **Channel → Edit Channel → Integrations → Webhooks → New Webhook → Copy URL**.
-2. In-game: open **`/dcontroller`** → **Webhooks** tab → paste the URL → **Add**.
-3. **Tuning** tab → arm the auto-alert, hit **Send Test**. Done.
-
-> Everything is configured in the in-game menu — no config files to edit.
-
----
-
-## Commands
-
-| Command | What it does |
-|---|---|
-| `/dcontroller` | Open the menu |
-| `/dcontroller alert now` · `test` | Manual / test alert |
-| `/dcontroller alert auto\|lowhealth\|death\|sound\|ping on\|off` | Toggle alert types |
-| `/dcontroller alert webhook add\|remove\|list\|clear <url>` | Manage webhooks |
-| `/dcontroller alert threshold hits\|health\|radius\|window\|cooldown <v>` | Tune the detector |
-| `/dcontroller clan war <enemy> <time> [details]` | Post a clan-war call |
-
-Keybinds live in **Options → Controls → Discord Controller** (open menu, send SOS, toggle auto-alert, answer call).
-
----
+- 🚨 Automatic attack alert (hits + damage in a window)
+- 🩸 Low-health emergency alert
+- 🆘 Manual help alert
+- ☠️ Optional death alert
+- 🎯 Smart attacker detection
+- 📨 In-game DMs (`/dmsg`)
+- 📞 Answer-call hotkey
+- 🔗 Discord ↔ Minecraft linking with in-game teammate alerts and a one-click join button
+- 🖥️ Animated neon menu + HUD
 
 ## Compatibility
 
-- **Fabric** 1.21.9 – 1.21.11
-- Requires **Fabric API** · **Java 21**
-- **Client-side** — install it yourself; no server mod needed.
+- Fabric · Minecraft 1.21.11 · Fabric API · Java 21 · client-side

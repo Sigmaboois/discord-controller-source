@@ -1,6 +1,7 @@
 plugins {
     id 'fabric-loom' version '1.17-SNAPSHOT'
     id 'maven-publish'
+    id 'com.modrinth.minotaur' version '2.8.7'
 }
 
 version = project.mod_version
@@ -53,4 +54,15 @@ jar {
     from("LICENSE") {
         rename { "${it}_${project.base.archivesName.get()}" }
     }
+}
+
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+    projectId = project.modrinth_project_id
+    versionNumber = project.mod_version
+    versionType = "release"
+    uploadFile = remapJar
+    gameVersions = ["1.21.11"]
+    loaders = ["fabric"]
+    syncBodyFrom = rootProject.file("MODRINTH.md").text
 }

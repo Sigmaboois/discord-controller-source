@@ -3,13 +3,13 @@
   "id": "discordcontroller",
   "version": "${version}",
   "name": "Discord In-Game Controller",
-  "description": "Get backup fast in PvP: fires automatic 'under attack', low-health, manual and death alerts to a Discord webhook with your coordinates, server IP and attacker. Clan war posts, an animated OLED/neon in-game menu, keybinds and /dcontroller commands. Setup is one webhook URL - no bot needed.",
+  "description": "Control Discord from inside Minecraft. Send DMs with /dmsg, answer calls, and fire under-attack / help alerts that carry your coordinates, dimension and server IP. Link teammates' Discord to their Minecraft accounts so their alerts reach you in-game with a one-click join button. Your Discord token is read locally from the Discord desktop app, encrypted with a master password, and only ever sent to Discord's own API.",
   "authors": [
     "Juicy Launcher"
   ],
   "icon": "assets/discordcontroller/icon.png",
   "contact": {
-    "homepage": "https://example.com"
+    "homepage": "https://github.com/Sigmaboois/discord-controller-source"
   },
   "license": "MIT",
   "environment": "client",
@@ -21,7 +21,7 @@
   "depends": {
     "fabricloader": ">=0.19.0",
     "fabric-api": "*",
-    "minecraft": ">=1.21.9 <1.22",
+    "minecraft": "~1.21.11",
     "java": ">=21"
   }
 }

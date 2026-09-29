@@ -1,22 +1,9 @@
-# Gradle / build output
 .gradle/
 build/
-out/
-run/
-dist/
-*.zip
-
-# IDE
 .idea/
 *.iml
-*.ipr
-*.iws
 .vscode/
-.settings/
-.classpath
-.project
-bin/
-
-# OS
-.DS_Store
-Thumbs.db
+out/
+run/
+*.class
+*.log
