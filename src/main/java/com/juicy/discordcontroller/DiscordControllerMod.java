@@ -26,6 +26,7 @@ public class DiscordControllerMod implements ClientModInitializer {
             Keybinds.onEndTick(client);
             AlertManager.get().onClientTick(client);
             IncomingAlerts.get().onClientTick(client);
+            SelfLink.get().onClientTick(client);
         });
 
         HudRenderCallback.EVENT.register((ctx, tickCounter) -> HudOverlay.render(ctx));

@@ -143,7 +143,7 @@ public class ControllerScreen extends Screen {
                 int rowY = contentTop() + 8;
                 recipName = field(fx, rowY, 96, 18, "Name");
                 recipId = field(fx + 104, rowY, fw - 104, 18, "Discord user ID");
-                recipMc = field(fx, contentTop() + 34, fw - 44, 18, "Minecraft name (optional link)");
+                recipMc = field(fx, contentTop() + 34, fw - 44, 18, "Minecraft name or UUID (optional)");
                 addSelectableChild(recipName);
                 addSelectableChild(recipId);
                 addSelectableChild(recipMc);
@@ -343,7 +343,10 @@ public class ControllerScreen extends Screen {
 
         List<Row> rows = new ArrayList<>();
         for (DiscordConfig.Recipient r : cfg.recipients) {
-            String sub = r.id + (r.mcName != null && !r.mcName.isBlank() ? "  ·  MC: " + r.mcName : "");
+            String linked = (r.mcName != null && !r.mcName.isBlank())
+                    ? "MC: " + r.mcName
+                    : (r.mcUuid != null && !r.mcUuid.isBlank() ? "MC: " + r.mcUuid : "");
+            String sub = r.id + (linked.isEmpty() ? "" : "  ·  " + linked);
             rows.add(new Row(r.name, sub, r.id, false, true, null,
                     () -> { cfg.recipients.removeIf(rr -> rr.name.equals(r.name)); cfg.save(); }));
         }
@@ -718,10 +721,14 @@ public class ControllerScreen extends Screen {
         }
         cfg.recipients.removeIf(r -> r.name.equalsIgnoreCase(n));
         DiscordConfig.Recipient rec = new DiscordConfig.Recipient(n, id);
-        rec.mcName = mc;
+        if (mc.matches("(?i)[0-9a-f]{32}")) {
+            rec.mcUuid = mc.toLowerCase();
+        } else {
+            rec.mcName = mc;
+        }
         cfg.recipients.add(rec);
         cfg.save();
-        if (!mc.isBlank()) {
+        if (!mc.isBlank() && !mc.matches("(?i)[0-9a-f]{32}")) {
             ControllerCommand.resolveMcUuid(id, mc);
         }
         recipName.setText("");

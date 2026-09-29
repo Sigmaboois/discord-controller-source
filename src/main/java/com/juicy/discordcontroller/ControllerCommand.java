@@ -284,6 +284,12 @@ public final class ControllerCommand {
                     source.sendError(Text.literal("§cStored token is invalid."));
                 } else {
                     source.sendFeedback(Text.literal("§aLogged in as " + describe(account)));
+                    if (cfg.selfMcName != null && !cfg.selfMcName.isBlank()) {
+                        source.sendFeedback(Text.literal("§7  Minecraft: §f" + cfg.selfMcName
+                                + " §7(§f" + cfg.selfMcUuid + "§7)"));
+                    } else {
+                        source.sendFeedback(Text.literal("§7  Minecraft: §7linking automatically once you're in a world."));
+                    }
                 }
             });
         }, "dcontroller-account").start();
@@ -334,7 +340,9 @@ public final class ControllerCommand {
         }
         ctx.getSource().sendFeedback(Text.literal("§aRecipients:"));
         for (DiscordConfig.Recipient r : cfg.recipients) {
-            String mc = (r.mcName != null && !r.mcName.isBlank()) ? " §7· MC: §f" + r.mcName : "";
+            String mc = (r.mcName != null && !r.mcName.isBlank())
+                    ? " §7· MC: §f" + r.mcName
+                    : (r.mcUuid != null && !r.mcUuid.isBlank() ? " §7· MC UUID: §f" + r.mcUuid : "");
             ctx.getSource().sendFeedback(Text.literal("§f  " + r.name + "§7 (" + r.id + ")" + mc));
         }
         return 1;
@@ -342,7 +350,7 @@ public final class ControllerCommand {
 
     private static int linkMc(CommandContext<FabricClientCommandSource> ctx) {
         String name = StringArgumentType.getString(ctx, "name");
-        String mcName = StringArgumentType.getString(ctx, "mcname").trim();
+        String mc = StringArgumentType.getString(ctx, "mcname").trim();
         DiscordConfig cfg = DiscordControllerMod.getConfig();
         DiscordConfig.Recipient rec = null;
         for (DiscordConfig.Recipient r : cfg.recipients) {
@@ -354,10 +362,16 @@ public final class ControllerCommand {
             ctx.getSource().sendError(Text.literal("§cNo recipient named '" + name + "'."));
             return 0;
         }
-        rec.mcName = mcName;
+        if (mc.matches("(?i)[0-9a-f]{32}")) {
+            rec.mcUuid = mc.toLowerCase();
+            cfg.save();
+            ctx.getSource().sendFeedback(Text.literal("§aLinked §f" + name + "§a to Minecraft UUID §f" + rec.mcUuid + "§a."));
+            return 1;
+        }
+        rec.mcName = mc;
         cfg.save();
-        resolveMcUuid(rec.id, mcName);
-        ctx.getSource().sendFeedback(Text.literal("§aLinked §f" + name + "§a to Minecraft §f" + mcName + "§a."));
+        resolveMcUuid(rec.id, mc);
+        ctx.getSource().sendFeedback(Text.literal("§aLinked §f" + name + "§a to Minecraft §f" + mc + "§a."));
         return 1;
     }
 

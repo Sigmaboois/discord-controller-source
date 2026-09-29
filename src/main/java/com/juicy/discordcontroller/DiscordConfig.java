@@ -20,6 +20,10 @@ public class DiscordConfig {
     public String pwSalt = "";
     public String pwVerifier = "";
 
+    public String selfDiscordId = "";
+    public String selfMcName = "";
+    public String selfMcUuid = "";
+
     public List<Recipient> recipients = new ArrayList<>();
     public String footer = "Discord HUD Controller";
     public String brand = "Juicy Launcher";
@@ -90,6 +94,9 @@ public class DiscordConfig {
                     if (cfg.encIv == null) cfg.encIv = "";
                     if (cfg.pwSalt == null) cfg.pwSalt = "";
                     if (cfg.pwVerifier == null) cfg.pwVerifier = "";
+                    if (cfg.selfDiscordId == null) cfg.selfDiscordId = "";
+                    if (cfg.selfMcName == null) cfg.selfMcName = "";
+                    if (cfg.selfMcUuid == null) cfg.selfMcUuid = "";
                     cfg.token = "";
                     cfg.sessionKey = null;
                     if (cfg.alertWebhookUrl != null && !cfg.alertWebhookUrl.isBlank()
